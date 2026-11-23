@@ -215,32 +215,9 @@ setInterval(tick, 1000);
 /* ---------- staff + auth screens ---------- */
 const flt = { tab: "all", cat: "all", host: "all", q: "", sort: "urg" };
 const TABS = [["fixed", "Fixed"], ["due", "Due"], ["overdue", "Overdue"], ["all", "All"]];
-const NAV = {
-  student: [["home", "Home"], ["complaints", "My complaints", "Complaints"], ["new", "New complaint", "New"], ["profile", "Profile"]],
-  manager: [["mhome", "Home"], ["tasks", "Task inbox", "Inbox"], ["techs", "Technicians"], ["profile", "Profile"]],
-  affairs: [["ahome", "Dashboard"], ["archive", "Archive"], ["profile", "Profile"]]
-};
-const IC = {
-  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
-  chat: '<path d="M4 5h16v11H9l-5 4z"/>',
-  plus: '<path d="M12 5v14M5 12h14"/>',
-  inbox: '<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/>',
-  team: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18 14.4c2.2.8 3.5 2.7 3.5 5.6"/>',
-  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
-  dash: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
-  archive: '<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>'
-};
-const ICON_OF = { home: "home", mhome: "home", ahome: "dash", complaints: "chat", new: "plus", tasks: "inbox", techs: "team", archive: "archive", profile: "user" };
-const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[ICON_OF[k] || "chat"]}</svg>`;
-/* which nav tab to light up – detail pages belong to the list they were opened from */
-let lastTop = null;
-const navKey = r => {
-  const mg = user.role === "manager", keys = NAV[user.role].map(n => n[0]);
-  if (keys.includes(r)) return (lastTop = r);
-  const dflt = { c: "complaints", rate: "complaints", chat: mg ? "tasks" : "complaints", m: mg ? "tasks" : "archive" }[r];
-  const from = { c: ["home", "complaints"], chat: ["mhome", "tasks", "home", "complaints"], m: ["ahome", "archive", "mhome", "tasks"] }[r] || [];
-  return keys.includes(lastTop) && from.includes(lastTop) ? lastTop : dflt;
-};
+const NAV = { student: [["home", "Home"], ["complaints", "My complaints"], ["profile", "Profile"]], manager: [["mhome", "Home"], ["tasks", "Task inbox"], ["techs", "Technicians"], ["profile", "Profile"]], affairs: [["ahome", "Dashboard"], ["archive", "Archive"], ["profile", "Profile"]] };
+const IC = { home: '<path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/>', chat: '<path d="M4 4h16v12H8l-4 4z"/>', gear: '<circle cx="12" cy="12" r="4"/><path d="M11 1h2v4h-2zM11 19h2v4h-2zM1 11h4v2H1zM19 11h4v2h-4z"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6z"/>' };
+const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[{ home: "home", mhome: "home", ahome: "home", profile: "user", techs: "gear" }[k] || "chat"]}</svg>`;
 const rank = c => (c.status === 3 ? 100 : 0) + (isLate(c) ? 0 : 10) + ["Urgent", "Major", "Minor"].indexOf(c.urgency);
 const byRank = (a, b) => rank(a) - rank(b) || a.deadline - b.deadline;
 const hostels = () => [...new Set(scope().map(c => c.hostel).filter(Boolean))];
@@ -272,7 +249,7 @@ const countUp = () => document.querySelectorAll(".stat b").forEach(el => {
 const appBadge = () => { try { const n = !user ? 0 : user.role === "manager" ? newCount() : user.role === "affairs" ? complaints.filter(isLate).length : 0; n ? navigator.setAppBadge?.(n) : navigator.clearAppBadge?.(); } catch {} };
 document.addEventListener("click", e => { if (e.target.closest("button,.chip,.opt,.item,.nav a,.hero")) navigator.vibrate?.(6); });
 const THEME_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="i-moon"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></g><g class="i-sun"><circle cx="12" cy="12" r="4.5"/><path d="M11 1h2v3h-2zM11 20h2v3h-2zM1 11h3v2H1zM20 11h3v2h-3zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zM16.3 17.7l1.4-1.4 2.1 2.1-1.4 1.4zM17.7 4.2l1.4 1.4-2.1 2.1-1.4-1.4zM5.6 19.8l-1.4-1.4 2.1-2.1 1.4 1.4z"/></g></svg>';
-const themeBtn = `<button class="tbtn" data-theme-toggle aria-label="Switch between light and dark mode"><span class="ic">${THEME_SVG}</span><span class="lb"><span class="lf">Light / dark</span><span class="ls">Theme</span></span></button>`;
+const themeBtn = `<button class="tbtn" data-theme-toggle aria-label="Switch between light and dark mode"><span class="ic">${THEME_SVG}</span><span class="lb">Light / dark</span></button>`;
 const applyTheme = () => {
   const p = store.get("hl_theme", "system"), d = p === "dark" || (p !== "light" && matchMedia("(prefers-color-scheme:dark)").matches);
   document.documentElement.dataset.theme = d ? "dark" : "light";
@@ -325,39 +302,7 @@ document.addEventListener("click", e => { const b = e.target.closest(".dd-btn");
 const sha = async p => { try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("hl:" + p)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); } catch { return "x" + btoa(unescape(encodeURIComponent(p))); } };
 const sweep = () => { let ch = false; complaints.forEach(c => { if (!c.esc && isLate(c)) { c.esc = Date.now(); ch = true; } }); if (ch) save(); };
 setInterval(sweep, 20000);
-const TRADES = ["Plumber", "Electrician", "Carpenter", "IT", "Cleaner", "Security", "General"];
-const techLabel = t => `${t.name} (${t.trade})`;
-const myTechs = () => techs.filter(t => hk(t.hostel) === hk(user.hostel)).map(techLabel);
-/* "Add technician" sheet – used on the Technicians page and from a complaint's Assign field */
-function openTechSheet(done) {
-  const opener = document.activeElement, bg = document.createElement("div"); let trade = TRADES[0];
-  bg.className = "sh-bg";
-  bg.innerHTML = `<form class="sh" role="dialog" aria-modal="true" aria-label="Add technician" novalidate><div class="sh-grab"></div><h4>Add technician</h4><div class="sh-body">
-    <label for="tn">Name</label><input id="tn" autocomplete="off" placeholder="e.g. Chinedu Okafor">
-    <label for="tp">Phone number <span class="opt-hint">(optional)</span></label><input id="tp" type="tel" autocomplete="off" placeholder="e.g. 0803 000 0000">
-    <label id="tl">Trade</label><div class="trades" role="radiogroup" aria-labelledby="tl">${TRADES.map((x, i) => `<button type="button" role="radio" aria-checked="${!i}" class="chip${i ? "" : " on"}" data-t="${x}">${x}</button>`).join("")}</div>
-    <div class="err" id="te" hidden></div>
-    <div class="row"><button type="button" class="btn alt" id="tx">Cancel</button><button class="btn">Add technician</button></div></div></form>`;
-  const key = e => { if (e.key === "Escape") close(); };
-  const close = () => { document.removeEventListener("keydown", key); document.body.style.overflow = ""; bg.classList.add("out"); setTimeout(() => { bg.remove(); opener?.focus?.({ preventScroll: true }); }, 200); };
-  bg.onclick = e => {
-    if (e.target === bg) return close();
-    const c = e.target.closest(".chip"); if (!c) return;
-    trade = c.dataset.t;
-    bg.querySelectorAll(".chip").forEach(x => { x.classList.toggle("on", x === c); x.setAttribute("aria-checked", x === c); });
-  };
-  bg.querySelector("#tx").onclick = close;
-  bg.querySelector("form").onsubmit = e => {
-    e.preventDefault();
-    const name = bg.querySelector("#tn").value.trim().replace(/\s+/g, " "), er = bg.querySelector("#te"), fail = m => { er.hidden = false; er.textContent = m; };
-    if (!name) { fail("Enter the technician's name."); return bg.querySelector("#tn").focus(); }
-    if (techs.some(t => hk(t.hostel) === hk(user.hostel) && hk(t.name) === hk(name) && t.trade === trade)) return fail(name + " is already on your list as " + trade.toLowerCase() + ".");
-    const t = { id: "t" + Date.now(), name, trade, phone: bg.querySelector("#tp").value.trim(), hostel: user.hostel };
-    techs.push(t); save(); close(); toast("Technician added"); done?.(t);
-  };
-  document.addEventListener("keydown", key); document.body.style.overflow = "hidden"; document.body.append(bg);
-  bg.querySelector("#tn").focus({ preventScroll: true });
-}
+const myTechs = () => techs.filter(t => hk(t.hostel) === hk(user.hostel)).map(t => `${t.name} (${t.trade})`);
 const allHostels = () => [...new Set([...users.map(u => u.hostel), ...complaints.map(c => c.hostel)].filter(Boolean))];
 const ROLES = { student: "Student", manager: "Hostel Manager", affairs: "Student Affairs Officer" };
 const exportCsv = () => {
@@ -409,10 +354,8 @@ Object.assign(screens, {
   },
   techs() {
     const l = techs.filter(t => hk(t.hostel) === hk(user.hostel));
-    const active = t => complaints.filter(c => c.tech === techLabel(t) && c.status < 3 && hk(c.hostel) === hk(user.hostel)).length;
-    const row = t => { const n = active(t); return `<div class="item" style="cursor:default"><div class="avatar">${initials(t.name)}</div><div class="grow"><b>${esc(t.name)}</b><small>${esc(t.trade)}${t.phone ? " · " + esc(t.phone) : ""}</small><small>${n ? n + " active complaint" + (n > 1 ? "s" : "") : "Available"}</small></div><button class="btn sm alt" data-x="${t.id}" aria-label="Remove ${esc(t.name)}">Remove</button></div>`; };
-    return `<header class="top"><div class="grow"><h1>Technicians</h1><p>${esc(user.hostel)}</p></div><button class="btn sm addbtn" data-add>+ Add technician</button></header>`
-      + (l.length ? `<h3 class="first">Your technicians (${l.length})</h3><div class="grid2">${l.map(row).join("")}</div>` : '<div class="empty">No technicians yet. Add the people you assign complaints to.<button class="btn" data-add>+ Add technician</button></div>');
+    return `${topbar("Technicians", esc(user.hostel), false)}<form class="card" id="tf" novalidate><label for="tn" style="margin-top:0">Name</label><input id="tn"><label for="tt">Trade</label><select id="tt">${["Plumber", "Electrician", "Carpenter", "IT", "Cleaner", "Security", "General"].map(x => `<option>${x}</option>`).join("")}</select><button class="btn">Add technician</button></form>
+      <h3>Your technicians</h3>${l.length ? l.map(t => `<div class="item" style="cursor:default"><div class="avatar">${initials(t.name)}</div><div class="grow"><b>${esc(t.name)}</b><small>${esc(t.trade)}</small></div><button class="btn sm alt" data-x="${t.id}">Remove</button></div>`).join("") : '<div class="empty">No technicians yet. Add the people you assign complaints to.</div>'}`;
   },
   mhome() {
     const todo = scope().filter(c => c.status < 3).sort(byRank).slice(0, 6);
@@ -425,8 +368,7 @@ Object.assign(screens, {
   mdetail(id) {
     const c = find(id); if (!c || (user.role === "manager" && hk(c.hostel) !== hk(user.hostel))) return screens.tasks();
     const mg = user.role === "manager", late = isLate(c);
-    const opts = [...new Set([c.tech, ...myTechs()].filter(Boolean))];
-    const ctrl = `<h3>Manage</h3><div class="card"><label for="tc">Assign technician</label><select id="tc"><option value="">Choose…</option>${opts.map(t => `<option ${c.tech === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select><button type="button" class="btn sm alt addt" id="addt">+ Add technician</button>
+    const ctrl = `<h3>Manage</h3><div class="card"><label for="tc">Assign technician</label><select id="tc"><option value="">Choose…</option>${myTechs().map(t => `<option ${c.tech === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>${myTechs().length ? "" : '<p class="note"><a href="#/techs">Add a technician first</a></p>'}
       <label for="sc">Update status</label><select id="sc">${STATUS.map((x, i) => `<option value="${i}" ${i === c.status ? "selected" : ""}>${x}</option>`).join("")}</select><button class="btn" id="up">Save update</button></div>`;
     const kv = (k, v) => `<div class="kv"><span>${k}</span><b>${esc(v)}</b></div>`;
     return `${topbar(esc(place(c)), esc(c.hostel) + " · " + esc(c.by))}
@@ -435,7 +377,7 @@ Object.assign(screens, {
       <h3>Progress</h3><div class="card">${trackHTML(c)}</div></div>
       <div><h3 class="first">Time left to resolve</h3><div class="timer" id="tm" data-d="${c.deadline}" data-done="${c.status === 3}"><b>--:--:--</b><span></span></div>
       ${c.esc || late ? '<div class="flag">⚑ Escalated to Student Affairs</div>' : ""}
-      ${mg ? ctrl + `<a class="btn dark" href="#/chat/${c.id}">Go to messages</a>` : ""}
+      ${mg ? ctrl : ""}<a class="btn dark" href="#/chat/${c.id}">Go to messages</a>
       ${c.rating ? `<h3>Student feedback</h3><div class="card"><b style="color:var(--amber)">${"★".repeat(c.rating.stars)}</b><p>${esc(c.rating.text)}</p></div>` : ""}</div></div>`;
   },
   ahome() {
@@ -452,7 +394,7 @@ Object.assign(screens, {
   sprofile() { return profileForm(); }
 });
 Object.assign(wire, {
-  welcome() { setTimeout(() => { if (!location.hash || location.hash === "#/welcome") location.hash = "#/role"; }, 2400); },
+  welcome() { setTimeout(() => { if (location.hash === "#/welcome") location.hash = "#/role"; }, 2400); },
   role() { $("#rf").onsubmit = e => { e.preventDefault(); location.hash = "#/login/" + new FormData(e.target).get("role"); }; },
   login(role) {
     $("#lf").onsubmit = async e => {
@@ -473,19 +415,17 @@ Object.assign(wire, {
     };
   },
   techs() {
-    document.querySelectorAll("[data-add]").forEach(b => b.onclick = () => openTechSheet(() => render()));
-    document.querySelectorAll("[data-x]").forEach(b => b.onclick = () => {
-      const t = techs.find(x => x.id === b.dataset.x);
-      if (!t || !confirm(`Remove ${t.name} from your technicians?`)) return;
-      techs = techs.filter(x => x.id !== t.id); save(); toast("Technician removed"); render();
-    });
+    $("#tf").onsubmit = e => {
+      e.preventDefault(); const n = $("#tn").value.trim(); if (!n) return toast("Enter the technician's name");
+      techs.push({ id: "t" + Date.now(), name: n, trade: $("#tt").value, hostel: user.hostel }); save(); render();
+    };
+    document.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { techs = techs.filter(t => t.id !== b.dataset.x); save(); render(); });
   },
   tasks: wireBoard, archive() { wireBoard(); $("#csv").onclick = exportCsv; },
   mdetail(id) {
     const c0 = find(id); if (user.role === "manager" && c0 && !c0.seen) { c0.seen = true; save(); }
     const f = document.querySelector(".fill");
     requestAnimationFrame(() => requestAnimationFrame(() => f && (f.style.width = f.dataset.w)));
-    $("#addt")?.addEventListener("click", () => openTechSheet(t => { const s = $("#tc"), v = techLabel(t); s.add(new Option(v, v)); s.value = v; s.dispatchEvent(new Event("change")); }));
     const b = $("#up"); if (!b) return;
     b.onclick = () => {
       const c = find(id); let st = +$("#sc").value; const t = $("#tc").value || c.tech;
@@ -502,8 +442,6 @@ Object.assign(wire, {
 });
 
 /* ---------- router ---------- */
-/* <main> gets the screen name as a class; these two collided with the .chat and .forgot component classes */
-const PAGE = { chat: "chatpage", forgot: "forgotpage" };
 function render() {
   sweep();
   const [, r = "welcome", id] = location.hash.split("/");
@@ -516,17 +454,14 @@ function render() {
   let name = r === "c" ? "detail" : r === "m" ? "mdetail" : r;
   if (name === "profile" && user.role !== "student") name = "sprofile";
   const fn = screens[name] || screens.welcome;
-  $("#app").className = PAGE[name] || name;
+  $("#app").className = name;
   $("#app").innerHTML = name === "new" ? `<div class="panel narrow">${fn(id)}</div>` : fn(id);
   enhanceSelects();
   (wire[name] || (() => {}))(id);
-  const nav = user ? NAV[user.role] : null;
+  const nav = user && NAV[user.role].some(n => n[0] === r) ? NAV[user.role] : null;
   $("#nav").hidden = !nav;
-  $("#tf").hidden = !!nav;
-  if (nav) {
-    const act = navKey(r), n = newCount();
-    $("#nav").innerHTML = `<div class="brand">HostelLink</div>${nav.map(i => `<a href="#/${i[0]}" data-r="${i[0]}" class="${i[0] === act ? "on" : ""}${i[0] === "new" ? " nw" : ""}"${i[0] === act ? ' aria-current="page"' : ""}><span class="ic">${icon(i[0])}</span><span class="lb"><span class="lf">${i[1]}</span><span class="ls">${i[2] || i[1]}</span></span>${i[0] === "tasks" && n ? `<b class="bdg">${n}</b>` : ""}</a>`).join("")}${themeBtn}`;
-  }
+  $("#tf").hidden = !!nav || r === "chat";
+  if (nav) $("#nav").innerHTML = `<div class="brand">HostelLink</div>${user.role === "student" ? '<a class="newbtn" href="#/new">+ New complaint</a>' : ""}${nav.map(n => `<a href="#/${n[0]}" data-r="${n[0]}" class="${n[0] === r ? "on" : ""}" aria-label="${n[1]}"><span class="ic">${icon(n[0])}</span><span class="lb">${n[1]}</span>${n[0] === "tasks" && newCount() ? `<b class="bdg">${newCount()}</b>` : ""}</a>`).join("")}${themeBtn}`;
   window.scrollTo(0, 0);
   requestAnimationFrame(segMove); countUp(); appBadge();
   tick();
@@ -541,16 +476,6 @@ addEventListener("storage", e => {
   if (r === "chat") { const c = find(id), box = $("#ch"); if (c && box) { box.innerHTML = c.msgs.map(msgHTML).join(""); box.scrollTop = box.scrollHeight; } }
   else if (["home", "complaints", "mhome", "ahome", "c", "m", "techs"].includes(r) || (r === "tasks" && document.activeElement?.id !== "q")) render();
 });
-/* on-screen keyboard: hide the bottom bar while typing on a phone so it doesn't eat the screen */
-let vvMax = 0;
-const kbCheck = () => {
-  const h = window.visualViewport ? visualViewport.height : innerHeight; vvMax = Math.max(vvMax, h);
-  const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName || "");
-  document.documentElement.classList.toggle("kb", typing && matchMedia("(max-width:899px)").matches && vvMax - h > 150);
-};
-window.visualViewport?.addEventListener("resize", kbCheck);
-addEventListener("focusin", kbCheck); addEventListener("focusout", () => setTimeout(kbCheck, 60));
-addEventListener("orientationchange", () => { vvMax = 0; setTimeout(kbCheck, 400); });
 if (document.startViewTransition) document.documentElement.classList.add("vt");
 addEventListener("hashchange", () => (document.startViewTransition && !matchMedia("(prefers-reduced-motion:reduce)").matches ? document.startViewTransition(render) : render()));
 render();
